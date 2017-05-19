@@ -1,22 +1,24 @@
 import Handler.BadRequestHandler;
-import Handler.GETHandler;
 import Handler.IHandler;
-import Handler.POSTHandler;
+import Handler.IndexSite;
+import Handler.ToDo.ToDoAdd;
+import Handler.ToDo.ToDoGet;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Created by Sufian Vaio on 28.04.2017.
  */
 public class ClientThread extends Thread {
     private final Socket client;
+    private static ArrayList<String> toDoList = new ArrayList<>(); //static is important
 
     public ClientThread(Socket client) {
         this.client = client;
-
     }
 
     public void run() {
@@ -25,7 +27,6 @@ public class ClientThread extends Thread {
 
             getHandler(in).handle(out);
 
-            out.close();
             client.close();
 
             System.out.println("Connection timed out");
@@ -35,18 +36,22 @@ public class ClientThread extends Thread {
     }
 
 
-
     public IHandler getHandler(InputStream in) throws IOException {
         byte[] b = new byte[1024];
         in.read(b);
-        String s = new String(b, 0, 1024);
+        String s = new String(b, 0, b.length);
         String[] array = s.split(" ");
-
-        switch (array[0]) {
-            case "GET":
-                return new GETHandler(array[1]);
-            case "POST":
-                return new POSTHandler(array[1]);
+        switch (array[1]) {
+            case "/public/todoadd.html":
+                return new ToDoAdd(array,toDoList);
+            case "/public/todoget.html":
+                return new ToDoGet(array,toDoList);
+            case "/public/index.html":
+                return new IndexSite(array);
+            case "/public/text.txt":
+                return new IndexSite(array);
+            case "/public/start.html":
+                return new IndexSite(array);
             default:
                 return new BadRequestHandler();
         }
