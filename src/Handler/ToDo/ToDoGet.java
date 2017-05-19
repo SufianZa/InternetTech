@@ -32,7 +32,6 @@ public class ToDoGet implements IHandler {
                 }
                 out.write("</ul>\n".getBytes());
                 out.write("</body>\n".getBytes());
-
                 break;
         }
     }

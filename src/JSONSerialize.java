@@ -115,16 +115,20 @@ import java.util.Map;
 
     @Override
     public Map<String, Object> getObjects() {
-        return null;
+        return josnHash;
     }
 
     @Override
     public Object getKey(String key) {
         for (Map.Entry<String, Object> entry : josnHash.entrySet()) {
             if (entry.getKey().equals(key)) {
-                if (entry.getValue().getClass() == String.class) {
-                    return String.valueOf(entry.getValue()).replace("\"", "");
-                } else return entry.getValue();
+                try {
+                    if (entry.getValue().getClass() == String.class) {
+                        return String.valueOf(entry.getValue()).replace("\"", "");
+                    } else return entry.getValue();
+                }catch(NullPointerException e){
+                    System.err.println("getKey("+key+") returns a null object");
+                }
             }
 
         }

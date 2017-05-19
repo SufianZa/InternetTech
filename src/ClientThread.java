@@ -1,6 +1,6 @@
 import Handler.BadRequestHandler;
 import Handler.IHandler;
-import Handler.IndexSite;
+import Handler.Website;
 import Handler.ToDo.ToDoAdd;
 import Handler.ToDo.ToDoGet;
 
@@ -27,6 +27,8 @@ public class ClientThread extends Thread {
 
             getHandler(in).handle(out);
 
+            in.close();
+            out.close();
             client.close();
 
             System.out.println("Connection timed out");
@@ -47,11 +49,9 @@ public class ClientThread extends Thread {
             case "/public/todoget.html":
                 return new ToDoGet(array,toDoList);
             case "/public/index.html":
-                return new IndexSite(array);
             case "/public/text.txt":
-                return new IndexSite(array);
             case "/public/start.html":
-                return new IndexSite(array);
+                return new Website(array);
             default:
                 return new BadRequestHandler();
         }

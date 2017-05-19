@@ -7,10 +7,12 @@ import java.io.OutputStream;
 /**
  * Created by Sufian Vaio on 19.05.2017.
  */
-public class IndexSite implements IHandler {
+public class Website implements IHandler {
     private  String[] array;
     private final String HEADER_HTTP = "HTTP/1.1 200 OK\n\n";
-    public IndexSite(String[] array) {
+
+
+    public Website(String[] array) {
         this.array = array;
     }
 
