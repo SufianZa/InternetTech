@@ -48,6 +48,7 @@ public class ClientThread extends Thread {
                 return new ToDoAdd(array,toDoList);
             case "/public/todoget.html":
                 return new ToDoGet(array,toDoList);
+            case "/public/canvas.html":
             case "/public/index.html":
             case "/public/text.txt":
             case "/public/start.html":

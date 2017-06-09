@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas</title>
+</head>
+<body>
+<canvas id="canvas" width="400" height="500" onmousedown="start(event)"
+        onmousemove="onDrag(event)" onclick="onRelease(event)" style="border: 5px solid black">
+</canvas>
+
+</body>
+
+
+<script>
+var startX;
+var startY;
+
+var lastX;
+var lastY;
+
+var canvas = document.getElementById("canvas");
+
+var clicked = false;
+var context = canvas.getContext("2d");
+
+
+    function start(event)
+    {
+             startX = event.clientX;
+             startY = event.clientY;
+         clicked = true;
+
+    }
+
+    function onDrag(event)
+    {
+         lastX = event.clientX;
+         lastY = event.clientY;
+
+
+    }
+
+    function onRelease(event)
+    {
+
+         context.moveTo(startX,startY);
+         context.lineTo(lastX,lastY);
+         context.stroke();
+         clicked = false;
+    }
+
+
+
+</script>
+
+</html>
