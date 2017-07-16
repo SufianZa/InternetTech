@@ -1,6 +1,4 @@
-import Handler.BadRequestHandler;
-import Handler.IHandler;
-import Handler.Website;
+import Handler.*;
 import Handler.ToDo.ToDoAdd;
 import Handler.ToDo.ToDoGet;
 
@@ -22,11 +20,14 @@ public class ClientThread extends Thread {
     }
 
     public void run() {
+
         try (OutputStream out = client.getOutputStream();
              InputStream in = client.getInputStream()) {
-
+            try {
             getHandler(in).handle(out);
-
+            }catch (ArrayIndexOutOfBoundsException e){
+                System.err.println("Empty request from Browser");
+            }
             in.close();
             out.close();
             client.close();
@@ -42,19 +43,30 @@ public class ClientThread extends Thread {
         byte[] b = new byte[1024];
         in.read(b);
         String s = new String(b, 0, b.length);
-        String[] array = s.split(" ");
-        switch (array[1]) {
-            case "/public/todoadd.html":
-                return new ToDoAdd(array,toDoList);
-            case "/public/todoget.html":
-                return new ToDoGet(array,toDoList);
-            case "/public/canvas.html":
-            case "/public/index.html":
-            case "/public/text.txt":
-            case "/public/start.html":
-                return new Website(array);
-            default:
-                return new BadRequestHandler();
+        String[] arraySplited = s.split(" ");
+               if(arraySplited[1].contains("getcanvas?id=")){
+            return new GetSavedCanvas(arraySplited);
         }
+            switch (arraySplited[1]) {
+                case "/public/todoadd.html":
+                    return new ToDoAdd(arraySplited, toDoList);
+                case "/public/todoget.html":
+                    return new ToDoGet(arraySplited, toDoList);
+                case "/public/login":
+                    return new Login(arraySplited);
+                case "/public/canvaslist":
+                    return new CanvasList(arraySplited);
+                case "/public/canvas_save":
+                    return new CanvasSave(arraySplited);
+                case "/public/getcanvas":
+                    return new GetAllCanvas(arraySplited);
+                case "/public/canvas.html":
+                case "/public/index.html":
+                case "/public/text.txt":
+                case "/public/start.html":
+                    return new Website(arraySplited);
+                default:
+                    return new BadRequestHandler();
+            }
     }
 }

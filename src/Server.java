@@ -1,3 +1,5 @@
+import Handler.JSONParser.JSONSerialize;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,6 +9,7 @@ import java.net.Socket;
  */
 public class Server {
     public static void main(String[] args) throws IOException {
+
         JSONSerialize jsoNserialize = new JSONSerialize();
         jsoNserialize.customAddArray("helloArray", new Object[]{2,"s",45, true, 2.5});
         String x = "{\n" +
@@ -19,10 +22,11 @@ public class Server {
                 "  \"123123123\": \"123123\",\n"+
                 "  \"1231232123\": 123123,\n"+
                 "  \"bookoftheyear\": false," +
-                "\"days\" : [ \"Monday\", \"Wednesday\", \"Thursday\"],"+"}";
-        jsoNserialize.parseString(x);
-        System.out.println(jsoNserialize.getString());
-
+                "\"days\" : [ \"Monday\", \"Wednesday\", \"Thursday\"],"+
+                "\"author\": \"T.Knowsitall\",\n"+"}";
+        String x2 = "{\n" +
+                "  \"bookoftheyear\": \"sufian\"," +
+               "}";
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
             System.out.println("Waiting...");
             while (true) {
@@ -31,6 +35,7 @@ public class Server {
                     clientSocket = serverSocket.accept();
                     System.out.println("Client Connected");
                     new ClientThread(clientSocket).start();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

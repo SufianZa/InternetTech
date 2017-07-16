@@ -1,3 +1,5 @@
+package Handler.JSONParser;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -5,10 +7,9 @@ import java.util.Map;
 /**
  * Created by Sufian Vaio on 05.05.2017.
  */
- class JSONSerialize implements IJsonSerialize {
-    String JSON = "{" + "\n";
-    HashMap<String, Object> josnHash = new HashMap<>();
-
+ public class JSONSerialize implements IJsonSerialize {
+     String JSON = "{" + "\n";
+     HashMap<String, Object> josnHash = new HashMap<>();
 
     @Override
     public void addString(String key, String str) {
@@ -42,12 +43,12 @@ import java.util.Map;
         for (Map.Entry<String, Object> entry : josnHash.entrySet()) {
             try {
                 if (entry.getValue() instanceof Object[]) {
-                    JSON += "\"" + entry.getKey() + "\": " + Arrays.toString((Object[]) entry.getValue()) + ",\n";
+                    JSON += "\"" + entry.getKey() + "\":" + Arrays.toString((Object[]) entry.getValue()) + ",\n";
                 } else {
-                    JSON += "\"" + entry.getKey() + "\": " + entry.getValue() + ",\n";
+                    JSON += "\"" + entry.getKey() + "\":" + entry.getValue() + ",\n";
                 }
             } catch (NullPointerException e) {
-                JSON += "\"" + entry.getKey() + "\": " + "null" + ",\n";
+                JSON += "\"" + entry.getKey() + "\":" + "null" + ",\n";
             }
         }
         return JSON + "}";
@@ -58,10 +59,10 @@ import java.util.Map;
     public void parseString(String str) {
         String value = null;
         String key = "";
-        String[] objects = str.split(",");
-        for (int i = 0; i < objects.length - 1; i++) {
+        String[] objects = str.replace("}","").split(",");
+        for (int i = 0; i < objects.length; i++) {
             key = objects[i].substring(objects[i].indexOf("\"") + 1, objects[i].indexOf("\"", objects[i].indexOf("\"") + 1));
-            value = objects[i].substring(objects[i].indexOf(":") + 2);
+            value = objects[i].substring(objects[i].indexOf(":") + 1);
             while (value.contains("[") ^ value.contains("]")) {
                 value = value.concat("," + objects[++i]);
             }

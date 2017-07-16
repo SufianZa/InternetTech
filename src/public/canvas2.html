@@ -5,10 +5,8 @@
     <title>canvas</title>
 </head>
 <body>
-    
         <canvas id="canvas" width="400" height="500" onmousedown="start(event)"
                 onmouseup="onRelease(event)" style="border: 2px solid black"></canvas>
-    
     <div>
         <div id="loggedin">Logged IN</div>
         <input id="loginName" type="text" />
@@ -20,7 +18,7 @@
     </div>
 </body>
 <script>
-     
+
     var myArray = [];
     if (localStorage.getItem("loginStatus") == "LoggedIN") {
         document.getElementById("loginName").style.display = 'none';
@@ -36,7 +34,43 @@
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
-
+var id =1
+  context.beginPath();
+        context.moveTo(304, 86);
+        context.lineTo(230, 187);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(204, 280);
+        context.lineTo(194, 321);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(304, 86);
+        context.lineTo(230, 187);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(204, 280);
+        context.lineTo(194, 321);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(304, 86);
+        context.lineTo(230, 187);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(204, 280);
+        context.lineTo(194, 321);
+        context.stroke();
+        context.closePath();
+  context.beginPath();
+        context.moveTo(287, 200);
+        context.lineTo(255, 347);
+        context.stroke();
+        context.closePath();
+﻿
     function start(event) {
         startX = event.clientX;
         startY = event.clientY;
@@ -71,28 +105,26 @@
                         button.style.display = 'none';
                         document.getElementById("loggedin").style.display = "block";
                         localStorage.setItem("loginStatus", "LoggedIN");
+                    } else {
+                        alert("Sorry");
                     }
-                } else {
-                    alert("Sorry");
-                }
                 }
             }
             http.open("POST", "http://localhost:8080/public/login", true);
             http.send(loginJSON);
         }
-    
-    function sendCoordinates() {
-        for (i = 0; i < myArray.length; i++) {
+    }
+        function sendCoordinates() {
+            for (i = 0; i < myArray.length; i++) {
+                var http = new XMLHttpRequest();
                 var jsonCord = JSON.stringify(myArray[i]);
-                var httpReq = new XMLHttpRequest();
-                httpReq.open("POST", "http://localhost:8080/public/canvas_save");
-                httpReq.send(jsonCord);
-
-             }
-            alert("Session id ist = "+id);
+                http.open("POST", "http://localhost:8080/public/canvas_save");
+                http.send(jsonCord);
+            }
+              alert("Session id ist = "+id);
         }
-     
 
-       
+
+
 </script>
 </html>

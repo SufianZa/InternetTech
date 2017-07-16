@@ -11,17 +11,17 @@ import java.util.ArrayList;
  */
 public class ToDoGet implements IHandler {
     private final ArrayList<String> toDoList;
-    private final String[] array;
+    private final String[] arraySplited;
     private final String HEADER_HTTP = "HTTP/1.1 200 OK\n\n";
 
     public ToDoGet(String[] array, ArrayList<String> toDoList) {
         this.toDoList = toDoList;
-        this.array = array;
+        this.arraySplited = array;
     }
 
     @Override
     public void handle(OutputStream out) throws IOException {
-        switch (array[0]) {
+        switch (arraySplited[0]) {
             case "GET":
                 out.write(HEADER_HTTP.getBytes());
                 out.write("<body>\n".getBytes());

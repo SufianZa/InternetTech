@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas</title>
+</head>
+<body>
+        <canvas id="canvas" width="400" height="500" onmousedown="start(event)"
+                onmouseup="onRelease(event)" style="border: 2px solid black"></canvas>
+    <div>
+        <div id="loggedin">Logged IN</div>
+        <input id="loginName" type="text" />
+        <input id="loginPass" type="password" />
+        <button id="send" onclick="verfiy()">Anmelden</button>
+    </div>
+    <div>
+        <button id="save" onclick="sendCoordinates()">Save</button>
+    </div>
+</body>
+<script>
+
+    var myArray = [];
+    if (localStorage.getItem("loginStatus") == "LoggedIN") {
+        document.getElementById("loginName").style.display = 'none';
+        document.getElementById("loginPass").style.display = 'none';
+        document.getElementById("send").style.display = 'none';
+    } else {
+        document.getElementById("loggedin").style.display = "none";
+    }
+    var startX;
+    var startY;
+    var lastX;
+    var lastY;
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");

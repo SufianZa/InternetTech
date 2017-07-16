@@ -1,3 +1,5 @@
+package Handler.JSONParser;
+
 import java.util.Map;
 
 public interface IJsonSerialize {
