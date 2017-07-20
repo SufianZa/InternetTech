@@ -1,0 +1,6 @@
+{ "StringArray": [mip ,mop , mup ,] }
+{ "DoubleArray": [0.1 ,2.5 ,3.0 ,4.2 ,] }
+{ "Int" : 0}
+{ "IntArray": [1,2000000000,3,45,0,] }
+{ "String" : "brumblbee"}
+{ "Double" : 452.0}

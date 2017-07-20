@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="utf-8">
+				<title>Canvaslist</title>
+					<script type="application/javascript">//<![CDATA[
+
+						var canvasIDs;
+						
+						window.onload = function(){
+							var lReq = new XMLHttpRequest();
+							lReq.open("GET", "getlist");
+							lReq.overrideMimeType("application/json");
+							lReq.addEventListener('load', function(event){
+								if(lReq.status == 200){
+									JSON.parse(lReq.responseText, (key,value) => {
+										if(key.localeCompare("canvasIDs") == 0) canvasIDs = value;
+									});
+									loadList('slct1');
+								}	
+							});
+							lReq.send();
+						}
+						
+						 function loadList(slct1){
+							 var s1 = document.getElementById(slct1);
+							 var optionArray = new Array();
+							 if(canvasIDs > 0){
+							 for(i = 0; i < canvasIDs; i++) optionArray[i] = i;
+								 for(var option in optionArray){
+								      if (optionArray.hasOwnProperty(option)) {
+								         var pair = optionArray[option];
+								         var newOption = document.createElement("option");
+								         newOption.value = pair;
+								         newOption.innerHTML = pair;
+								         s1.options.add(newOption);
+								     }
+								 }
+							 }else{
+								 var newOption = document.createElement("option");
+								 var str ="empty";
+								 newOption.value = str;
+								 newOption.innerHTML = str;
+								 s1.options.add(newOption);
+								 
+							 }
+						}
+
+						 function reload(){
+							 location.reload();
+						 }
+						 
+						 function loadCanvas(slct){
+							 var s2 = document.getElementById(slct);
+							 if(s2.value >= 0 && s2.value < canvasIDs && s2.value.localeCompare("") != 0){
+								 localStorage.setItem('canvasId', s2.value);
+								 window.open("/canvas");
+								 var select = document.getElementById(slct);
+								 select.value = "";
+							 }
+						 }
+						
+					//]]> 
+					</script>
+		</head>
+	<body>
+		<h2>Canvas List</h2>
+			<hr /> Choose a Canvas ID:
+				<select id="slct1" name="slct1" onclick="loadCanvas(this.id)">
+				   <option value=""></option>
+				</select>
+		<div><br><button id="reload" onclick="reload()">Refresh</button></div>			
+	</body>
+</html>
+

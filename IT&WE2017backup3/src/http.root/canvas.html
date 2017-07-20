@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	  <meta charset="utf-8">
+	 	 <title>Linienzeichner</title>
+	 	 <!-- set response field invisible -->
+	 		 <style type="text/css">
+	   		  #show, #hide, #showAlways{ display:none; }
+	   		    .typA { margin: 1cm; background-color:#99FF99; }
+	   		    .typB{ height: 150px; padding: 12px 20px; box-sizing: border-box; border: 2px solid #ccc; 
+	   		           border-radius: 4px; background-color: #f8f8f8;}
+	   		    .typC { margin: 1cm; background-color:#99FF99; display:none;}
+			</style>
+			
+    	<script type="application/javascript">//<![CDATA[
+        var x1,x2,x3,x4 = 0.0;
+        var canvas;
+        var ctx;
+        var response;
+        var lineArray = new Array();
+        var numberCanvas = new Array();
+        var sessions = new Array();
+        var num = "";
+        var locStor = "";
+        var saveId = "";
+        var connection = null;
+        var session = -1;
+        var checkSend = false;
+       
+          //onload wird erst ausgeführt, wenn Seite geladen, 
+          //bindet Event (onload) an Funktion und führt diese aus, wenn gefeuert
+     	  window.onload = function(){
+     		 canvas = document.getElementById("canvas");
+             ctx = canvas.getContext("2d"); 
+             canvas.addEventListener("mousedown", mDown, false);
+             canvas.addEventListener("mouseup", mUp, false);
+             document.getElementById("textArea").value = "Your saved Canvas IDs:";
+             document.getElementById("sendServerButton").innerHTML = "Start Server Canvas";
+             //check if logged in
+             authentificate(); 
+           //get canvas Id from local Strorage (if set by canvaslist.html link)
+             locStor = localStorage.getItem('canvasId');
+             //reset canvas Id in local Strorage
+             localStorage.setItem('canvasId', "");
+             //if page called by canvaslist.html link (locStor exist && locStor =/= 0) load Canvas
+             if(locStor && locStor.localeCompare("") != 0) receiveLocal();
+     	  }
+      
+          //send "access" obj after every page (re-)laoding, hide or show textfields and buttons by response
+          function authentificate(){
+            var aut = localStorage.getItem('access');
+          	var lReq = new XMLHttpRequest();
+          	lReq.open("POST", "http://localhost:8080/autentificate");
+          	lReq.setRequestHeader("content-type", "application/json");
+          	lReq.overrideMimeType("application/json");
+          	//<!--if answer correct, hide input field, show text-->
+          	lReq.addEventListener('load', function(event){
+          		if(lReq.status == 200){
+          			obj = document.getElementById('show');
+          			obj.style.display = 'inline';
+          			obj = document.getElementById('showAlways');
+          			obj.style.display = 'inline';
+          		}
+          		else if(lReq.status == 403){
+          			obj = document.getElementById('hide');
+          			obj.style.display = 'inline';
+          		}else console.warn(lReq.statusText, lReq.responseText);
+          	});
+          	lReq.send(aut); 
+          }
+          
+        //sends login data as json when login button pressed, hide or show textfields and buttons by response
+        function send(){
+        	var uname = document.getElementById("uname").value;
+        	var password = document.getElementById("password").value;
+        	var obj = {uname, password};
+        	var str = JSON.stringify(obj);
+        	var lReq = new XMLHttpRequest();
+        	lReq.open("POST", "http://localhost:8080/login");
+        	lReq.setRequestHeader("content-type", "application/json");
+        	lReq.overrideMimeType("application/json");
+        //if answer correct, hide input field, show text and store session token locally
+        	lReq.addEventListener('load', function(event){
+        		if(lReq.status == 200){
+        			obj = document.getElementById('hide');
+        			obj.style.display = 'none';
+        			obj = document.getElementById('show');
+        			obj.style.display = 'inline';
+          			obj = document.getElementById('showAlways');
+          			obj.style.display = 'inline';
+        			response = lReq.responseText;
+        			localStorage.setItem('access', response);
+        		}
+        		else console.warn(lReq.statusText, lReq.responseText);
+        	});
+        	lReq.send(str);
+        }
+        
+        //clears localStrorage and reload page when logout pressed
+        function clearLogin(){
+        	 localStorage.clear();
+        	 lineArray = new Array();
+        	 location.reload();
+        }
+        
+        //connect to webserver, request sessions, update session list
+        function startServer(){
+        	clearCanvas();
+        	var state = document.getElementById("sendServerButton").innerHTML;
+        	switch(state){
+        		case "Start Server Canvas": connection = new WebSocket('ws://debby.vs.uni-due.de/ws/');
+        								    connection.onopen = function(){connection.send(JSON.stringify( {type : "list"} ));};
+            								document.getElementById("sendServerButton").innerHTML = "Enter Session:";
+            								sessions = new Array();
+        									break;
+        		case "Enter Session:":   	var type = "join";
+						            		session = document.getElementById("id").value;
+											var name = document.getElementById("canvasName").value;
+						            		var jObj = {type, session, name};
+						            		var jStr = JSON.stringify(jObj);
+						            		connection.send(jStr);
+        									break;
+			   	default:					connection.close(1000, "Sitzung von User verlassen");
+							        		obj = document.getElementById('storeServerButton');
+							       			obj.style.display = 'none';
+				        					document.getElementById("sendServerButton").innerHTML = "Start Server Canvas";
+				        					sessions = new Array();
+				        					lineArray = new Array();
+        	}
+        	
+        	connection.onmessage = function(e){
+        		console.log("onmessage: " + e.data);
+        		//check if incoming contains "type" keyword
+        		if(e.data.indexOf("type") != -1){
+        			//check if "join" succeed
+        			if(e.data.indexOf("true") != -1){
+        				obj = document.getElementById('storeServerButton');
+              			obj.style.display = 'inline';
+              			document.getElementById("sendServerButton").innerHTML = "Leave Session";
+        			}
+	        		var ses = "Server Session IDs:\n";
+	        		JSON.parse(e.data, (key,value) =>{
+	        			var k = key.toString();
+	        			var i = parseInt(k, 10);
+	        			var s = i.toString();
+	        			if(s.localeCompare("NaN") != 0 && i != 0 && sessions.indexOf(i) == -1){
+	        				sessions.push(i);
+	        			}
+	        			//console.log("key: " + key + " val: " + value)	
+	        		});
+	        		//add new session if doesnt exists
+	        		/*
+	        		if(session != -1 && sessions.indexOf(session) == -1){
+	        			sessions.push(session);
+	        			session = -1;
+	        		}
+	        		*/
+	        		for(x = 0; x < sessions.length; x++){
+	        			var tmp = ses;
+        				ses = tmp + "\n" + sessions[x];
+	        		}
+	        		//set message to 0 if no session available
+	        		if(sessions.length == 0){
+	        			var tmp = ses;
+	        			ses = tmp + "no Sessions available";
+	        		}
+	        		document.getElementById("textArea").value = ses + "\n\nEnter Session by existing Id or create \nnew Session with nonexisting Id";
+	        		//for(x = 0; x < sessions.length; x++) console.log("session: " + sessions[x]);
+        		}else{
+        			receiveServer(e.data);
+        		}
+        	};
+
+        	connection.onerror = function(error){
+        		console.log('WebSocketError' + error);
+        	};
+        	
+        	connection.onclose = function (closeEvent) {
+        	    console.log('Die Verbindung wurde geschlossen --- Code: ' + closeEvent.code + ' --- Grund: ' + closeEvent.reason);
+        	};
+        }
+        
+        //send lines to websocketserver
+        function storeServer(){
+        	checkSend = true;
+        	if(lineArray.length > 0){
+        		var str = "{\"Lines\":[";
+        		for(i = 0; i < lineArray.length; i++){
+        			str += JSON.stringify(lineArray[i]);
+        			if(i < lineArray.length -1) str += ","
+        		}
+        		connection.send(str +  "]}");
+        	}
+        }
+        
+        //receive lines from websocketserver and draw
+        function receiveServer(recCan){
+        	if(checkSend == true) return checkSend = false;
+        	console.log("receive: " + recCan);
+        	var a,b,c,d;
+			JSON.parse(recCan, (key, value) => {
+				var k = key.toString();	
+				if(k.localeCompare("x1") == 0) a = value;
+				if(k.localeCompare("y1") == 0) b = value;
+				if(k.localeCompare("x2") == 0) c = value;
+				if(k.localeCompare("y2") == 0) d = value;	
+				//if variables completes a line (no further var in iteration) draw line
+				if(k.localeCompare("x1") != 0 && k.localeCompare("x2") != 0 && k.localeCompare("y1") != 0 && k.localeCompare("y2") != 0){
+					//save to array
+					var line = {a,b,c,d};
+					if(lineArray.indexOf(line) == -1) lineArray.push(line);
+					  ctx.beginPath;
+			          ctx.moveTo(a,b);
+			          ctx.lineTo(c,d);
+			          ctx.strokeStyle = "red";
+			          ctx.strokeWidth = 2;
+			          ctx.stroke();
+			          ctx.closePath();
+				}
+			});		
+        }
+        
+        //send line coords as JSON and draw received lines when send button pressed
+        function sendLocal(){
+        	if(lineArray.length > 0){
+        		var str = "{\"Lines\":[";
+        		for(i = 0; i < lineArray.length; i++){
+        			str += JSON.stringify(lineArray[i]);
+        			if(i < lineArray.length -1) str += ","
+        		}
+        		str += "]}";
+        		//set resource to canvas id if the canvas was loaded
+        		var saveResource = "";
+        		if(saveId && saveId.localeCompare("") != 0) saveResource = "/canvas_save?id=" + saveId;
+        		else saveResource = "/canvas_save";
+            	var oReq = new XMLHttpRequest();
+            	oReq.open("POST", saveResource);
+            	oReq.setRequestHeader("content-type", "application/json");
+            	oReq.overrideMimeType("application/json");
+            	//write received CanvasId to Textfield and save in Array
+            	oReq.addEventListener('load', function(event){
+            		if(oReq.status == 200){
+            			JSON.parse(oReq.responseText, (key, value) => {
+            				if(key.localeCompare("Id") == 0){
+            					//reset counter and array if server deleted canvas
+            					if(value < numberCanvas.length){
+            						numberCanvas = new Array();
+            						num = "";
+            					}
+            					var concat = num + "\n" + value.toString();
+            					numberCanvas.push(value);
+            					num = concat;
+            				}
+            			});
+                    	document.getElementById("textArea").value = "Your saved Canvas IDs:" + num;
+            		}
+            	});	
+            	oReq.send(str);
+            	//reset lines
+            	lineArray = new Array();
+        	}else{
+        		alert("no line to send \nor line already sent");
+        	}
+        }
+        
+        //loads a canvas whether from external list, or from local input
+        function receiveLocal(){
+        	//return if Websocketserver connection established
+        	if(connection && connection.readyState == 1) return alert("Server session started");
+        	var canvasId;
+        	//if page loaded from external list, load desired canvas, else load canvas from local input
+        	if(locStor && locStor.localeCompare("") != 0){
+        		canvasId = locStor;
+                //set canvas save Id to the loaded canvas
+                saveId = locStor;
+        	}
+        	else{
+        		canvasId = document.getElementById("id").value;
+        		saveId = canvasId;
+        	}
+        	//reset storage variable
+        	locStor = "";
+        	//handle canvas loading
+        	var resource = "/getcanvas";
+        	if(canvasId) resource = "/getcanvas?id=" + canvasId;
+        	var oReq = new XMLHttpRequest();
+        	oReq.open("GET", resource);
+        	oReq.setRequestHeader("content-type", "application/json");
+        	oReq.overrideMimeType("application/json");
+        	oReq.addEventListener('load', function(event){
+        		if(oReq.status == 200){  
+        			if(!oReq.responseText.localeCompare("") == 0){
+        				var a,b,c,d;
+						JSON.parse(oReq.responseText, (key, value) => {
+							var k = key.toString();	
+							if(k.localeCompare("x1") == 0) a = value;
+							if(k.localeCompare("y1") == 0) b = value;
+							if(k.localeCompare("x2") == 0) c = value;
+							if(k.localeCompare("y2") == 0) d = value;
+							//if variables completes a line (no further var in iteration) draw line
+							if(k.localeCompare("x1") != 0 && k.localeCompare("x2") != 0 && k.localeCompare("y1") != 0 && k.localeCompare("y2") != 0){
+								  ctx.beginPath;
+						          ctx.moveTo(a,b);
+						          ctx.lineTo(c,d);
+						          ctx.strokeStyle = "blue";
+						          ctx.strokeWidth = 2;
+						          ctx.stroke();
+						          ctx.closePath();
+							}
+						});
+        			}
+        		}
+        	});
+        	oReq.send();
+        }
+        
+     	//set start coords of line when mouse button pressed
+        function mDown(event) {
+      	  x1 = event.pageX -10;
+      	  y1 = event.pageY -50;
+		}
+     	
+		//set end coords of line and sendParam() when mouse button released
+		function mUp(event) {
+		  x2 = event.pageX -10;
+  		  y2 = event.pageY -50;
+  		  var line = {x1,y1,x2,y2};
+  		  lineArray.push(line);
+  	      ctx.beginPath;
+          ctx.moveTo(x1,y1);
+          ctx.lineTo(x2,y2);
+          ctx.strokeStyle = "blue";
+          ctx.strokeWidth = 2;
+          ctx.stroke();
+          ctx.closePath();
+		}
+		
+	    
+        function clearCanvas(){
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			lineArray = new Array();
+			ctx.beginPath();
+		}
+        
+		//]]>
+    	</script>
+     </head>
+     
+    <body>
+      <div><font face="Arial, Helvetica, sans-serif" size="6">Mal mal</font></div>      
+   		<span><canvas id="canvas"  width="500" height="500" style="border:1px solid #d3d3d3;">Canvas not supported
+   			  </canvas><textarea id="textArea" class="typB">Canvas:</textarea> 
+   		</span>	  
+		  <div><a href="#"></a>
+		    <div id="hide"><input id="uname" type="text" name="Username" size="20" maxlength="100">Username
+		      			   <input id="password" type="password" name="Passwort" size="20" maxlength="100">Password
+		      			   <button id="loginButton" onclick="send()">Login</button>
+		    </div>
+		    <div id="show">You did it</div>
+		    <div id ="showAlways"><button id="logoutButton" onclick="clearLogin()">Logout</button>
+		   	 					  <br><br>
+		     					  <button id="sendButton" class="typA" onclick="sendLocal()">Send to Local</button><button id="sendServerButton" class="typA" onclick="startServer()"></button>
+		     					  <input id="id" type="text" name="CanvasId" size="20" maxlength="999" value="ID or empty"></input><button id="receiveLocal" class="typA" onclick="receiveLocal()">Load Canvas</button>
+		     					  <button id="clearButton" class="typA" onclick="clearCanvas()">Clear</button> <input id="canvasName" type="text" name="canvasName" size="20" maxlength="20" value="Name"></input><button id="storeServerButton" class="typC" onclick="storeServer()">Store Session</button>
+		     					  
+		   </div>
+	 </div>
+   </body>
+</html>

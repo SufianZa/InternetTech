@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	  <meta charset="utf-8">
+	 	 <title>Linienzeichner</title>
+	 	 <!-- set response field invisible -->
+	 		 <style type="text/css">
+	   		  #show, #hide, #showAlways{ display:none; }
+			</style>
+			
+    	<script type="application/javascript">
+        var x1 = 0.0;
+        var x2 = 0.0;
+        var y1 = 0.0;
+        var y2 = 0.0;
+        var canvas;
+        var ctx;
+        var response;
+        var lineArray = new Array();
+       
+          //onload wird erst ausgeführt, wenn Seite geladen, 
+          //bindet Event (onload) an Funktion und führt diese aus, wenn gefeuert
+     	  window.onload = function(){
+     		 canvas = document.getElementById("canvas");
+             ctx = canvas.getContext("2d"); 
+            
+             authentificate();
+     	  }
+      
+          function authentificate(){
+            var aut = localStorage.getItem('access');
+          	var lReq = new XMLHttpRequest();
+          	lReq.open("POST", "/autentificate");
+          	<!--if answer correct, hide input field, show text-->
+          	lReq.addEventListener('load', function(event){
+          		if(lReq.status == 200){
+          			obj = document.getElementById('show');
+          			obj.style.display = 'inline';
+          			obj = document.getElementById('showAlways');
+          			obj.style.display = 'inline';
+          		}
+          		else if(lReq.status == 403){
+          			obj = document.getElementById('hide');
+          			obj.style.display = 'inline';
+          		}else console.warn(lReq.statusText, lReq.responseText);
+          	});
+          	lReq.send(aut); 
+          }
+          
+        //sends login data as json and receive answer
+        function send(){
+        	var uname = document.getElementById("uname").value;
+        	var password = document.getElementById("password").value;
+        	var obj = {uname, password};
+        	var str = JSON.stringify(obj); //=/= JSON.parse();
+        	var lReq = new XMLHttpRequest();
+        	lReq.open("POST", "/login");
+        	<!--if answer correct, hide input field, show text and store session token locally-->
+        	lReq.addEventListener('load', function(event){
+        		if(lReq.status == 200){
+        			obj = document.getElementById('hide');
+        			obj.style.display = 'none';
+        			obj = document.getElementById('show');
+        			obj.style.display = 'inline';
+          			obj = document.getElementById('showAlways');
+          			obj.style.display = 'inline';
+        			response = lReq.responseText;
+        			localStorage.setItem('access', response);
+        		}
+        		else console.warn(lReq.statusText, lReq.responseText);
+        	});
+        	lReq.send(str);
+        }
+        
+        //ckears localStrorage and reload page
+        function clearLogin(){
+        	 localStorage.clear();
+        	 location.reload();
+        }
+        
+        //sends line coords as json
+        function sendParam(){
+            var oReq = new XMLHttpRequest();
+            oReq.open("POST", "/canvas_save");
+            oReq.send(lineArray);
+        }
+        
+     	//set start coords of line
+        function mDown(obj, event) {
+       	 // x1 = event.clientX;
+      	 // y1 = event.clientY;
+		}
+		//set end coords of line and sendParam()
+		function mUp(obj, event) {
+ 		 // x2 = event.clientX;
+  		 // y2 = event.clientY;
+  		  var line = {x1,y1,x2,y2};
+  		  var str = JSON.stringify(line);
+  		  lineArray.push(str);
+  	      ctx.beginPath;
+          ctx.moveTo(x1,y1);
+          ctx.lineTo(x2,y2);
+          ctx.stroke();
+		}
+      </script>
+     </head>
+     
+    <body>
+      <div><font face="Arial, Helvetica, sans-serif" size="6">Mal mal</font></div>      
+   		<span><canvas id="canvas" onmousedown="mDown(this, event)" onmouseup="mUp(this,event)" 
+   			   width="500" height="500" style="border:1px solid #d3d3d3;">Canvas not supported
+   			   </canvas>
+   		</span>	  
+ 		  <!-- 'input' is a tag, 'id' set a unique name, onclick, onmouse,... are event attributes, 
+ 		   ids 'hide' and 'show' for visibility function, hfref=# sets tag invisible (see above), send() is bound to the event, mUp is bound to event with arguments-->
+		  <div><a href="#"></a>
+		    <div id="hide"><input id="uname" type="text" name="Username" size="20" maxlength="100">
+		      			   <input id="password" type="password" name="Passwort" size="20" maxlength="100">
+		      			   <button id="loginButton" onclick="send()">Login</button>
+		    </div>
+		    <div id="show">You did it</div>
+		    <div id ="showAlways"><button id="logoutButton" onclick="clearLogin()">Logout</button>
+		   	 					  <br>
+		   					   	  <br>
+		     					  <button id="sendButton" onclick="sendParam()">Send</button>
+		    </div>
+		   </div>
+   </body>
+</html>

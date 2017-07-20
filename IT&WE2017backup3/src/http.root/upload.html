@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="utf-8">
+<title>Dateiupload</title>
+</head>
+<body>
+<p><font face="Arial, Helvetica, sans-serif" size="6">Dateiupload via HTML </font></p>
+<form method="post" action="upload.php" enctype="multipart/form-data">
+  Datei:
+  <input type="hidden" name="MAX_FILE_SIZE" value="100000">
+  <input type="file" name="datei" size="40" maxlength="100000">
+  <input type="submit" name="Submit" value="Senden">
+</form>
+</body>
+</html>
